@@ -82,13 +82,22 @@ async function run() {
       app.post('/camps',async (req,res)=>{
            try{
             const campsInfo=req.body
-           console.log(campsInfo)
            const result=await campsCollection.insertOne(campsInfo)
            return res.send(result)
            }
            catch{
-            return res.send(result)
+            return res.send({error:true})
            }
+      })
+
+      app.get('/camps',async(req,res)=>{
+          try{
+             const result=await campsCollection.find().toArray()
+             return res.send(result)
+          }
+          catch{
+            return res.send({error:true})
+          }
       })
 
 
