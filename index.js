@@ -1,15 +1,35 @@
 const express= require("express")
 const cors=require('cors')
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const app=express();
 const port=process.env.PORT || 5000
 
 
 // middleware
-app.use(cors())
+app.use(cors({
+    origin:['http://localhost:5173'],
+    credentials: true
+}))
 app.use(express.json())
+app.use(cookieParser())
 
+
+const verify=async (req,res,next)=>{
+      const token=req.cookies?.token
+      if(!token){
+          return res.status(401).send({message:'Unauthorized access'})
+      }
+      jwt.verify(token,process.env.ACCESS_Token_SECRET,(error,decoded)=>{
+         if(error){
+          return res.status(401).send({message:'Unauthorized access'})
+         }
+         req.user=decoded 
+         next()
+      })
+}
 
 
 
@@ -30,10 +50,35 @@ async function run() {
     // await client.connect();
        const usersCollection=client.db('MediCampsHub').collection('users')
        const campsCollection=client.db('MediCampsHub').collection('camps')
-      
+       
+
+
+      //  jwt 
+      app.post('/jwt',async (req,res)=>{
+           const user=req.body
+           const token=jwt.sign(user,process.env.ACCESS_Token_SECRET,{expiresIn:'3000h'})
+
+           res
+           .cookie('token',token,{
+              httpOnly: true,
+              secure: process.env.NODE_ENV==='production'? true : false,
+              sameSite:process.env.NODE_ENV==='production'? "none" : "strict"
+           })
+           .send({success: true})
+      })
+     
+      app.post('/jwtRemove',async(req,res)=>{
+
+        res.clearCookie('token',{
+          maxAge:0,
+          secure: process.env.NODE_ENV==='production'? true : false,
+          sameSite:process.env.NODE_ENV==='production'? "none" : "strict"
+        })
+        .send({success:true})
+    })
+     
         
       //  camps related api
-
       app.post('/camps',async (req,res)=>{
            try{
             const campsInfo=req.body
@@ -70,7 +115,7 @@ async function run() {
               }
      })
      
-     app.get('/hp',async(req,res)=>{
+     app.get('/hp', async(req,res)=>{
              try{
               const role='Healthcare Professional'
               const query={role:role}
