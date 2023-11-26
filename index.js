@@ -100,6 +100,16 @@ async function run() {
           }
       })
 
+      app.get('/topCamps',async(req,res)=>{
+          try{
+              const result=await campsCollection.find().sort({participant:-1}).limit(6).toArray()
+              res.send(result)
+          } 
+          catch{
+            return res.send({error:true})
+          }
+      })
+
 
 
 
