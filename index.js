@@ -104,7 +104,8 @@ async function run() {
       })
 
       app.put('/participate',verify,async(req,res)=>{
-            const {id,newParticipant}=req.body
+            try{
+              const {id,newParticipant}=req.body
             const query={_id:new ObjectId(id)}
              const newInfo={
                  $set:{
@@ -114,6 +115,10 @@ async function run() {
 
              const result=await campsCollection.updateOne(query,newInfo)
              return res.send(result)
+            }
+            catch{
+              return res.send({error:true})
+            }
             
       })
 
@@ -148,6 +153,28 @@ async function run() {
           catch{
             return res.send({error:true})
           }
+      })
+
+      app.get('/manageCamps',async(req,res)=>{
+           const {email}=req.query
+           console.log(email)
+           if(email){
+             const query={userEmail: email}
+             const result=await campsCollection.find(query,{
+              projection:{
+                image:0,
+                services:0,
+                details:0,
+                healthPro:0,
+                services:0,
+                audience:0
+              }
+             }).toArray()
+             return res.send(result)
+           }
+           else{
+            return res.send({error:true})
+           }
       })
 
 
