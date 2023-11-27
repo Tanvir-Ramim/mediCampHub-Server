@@ -50,6 +50,7 @@ async function run() {
     // await client.connect();
        const usersCollection=client.db('MediCampsHub').collection('users')
        const campsCollection=client.db('MediCampsHub').collection('camps')
+       const registerCollection=client.db('MediCampsHub').collection('register')
        
 
 
@@ -76,10 +77,22 @@ async function run() {
         })
         .send({success:true})
     })
+
+     
+      // registration related api
+      app.post('/register', verify,async (req,res)=>{
+         
+            const registerInfo=req.body 
+           
+            const result=await registerCollection.insertOne(registerInfo)
+            return res.send(result)
+      })
+
+
      
         
       //  camps related api
-      app.post('/camps',async (req,res)=>{
+      app.post('/camps', async (req,res)=>{
            try{
             const campsInfo=req.body
            const result=await campsCollection.insertOne(campsInfo)
@@ -88,6 +101,20 @@ async function run() {
            catch{
             return res.send({error:true})
            }
+      })
+
+      app.put('/participate',verify,async(req,res)=>{
+            const {id,newParticipant}=req.body
+            const query={_id:new ObjectId(id)}
+             const newInfo={
+                 $set:{
+                  participant: newParticipant
+                 }
+             }
+
+             const result=await campsCollection.updateOne(query,newInfo)
+             return res.send(result)
+            
       })
 
       app.get('/camps',async(req,res)=>{
