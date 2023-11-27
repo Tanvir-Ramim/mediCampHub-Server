@@ -3,7 +3,7 @@ const cors=require('cors')
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app=express();
 const port=process.env.PORT || 5000
 
@@ -93,6 +93,7 @@ async function run() {
       app.get('/camps',async(req,res)=>{
           try{
              const result=await campsCollection.find().toArray()
+             const len=result.length
              return res.send(result)
           }
           catch{
@@ -103,13 +104,24 @@ async function run() {
       app.get('/topCamps',async(req,res)=>{
           try{
               const result=await campsCollection.find().sort({participant:-1}).limit(6).toArray()
-              res.send(result)
+             return res.send(result)
           } 
           catch{
             return res.send({error:true})
           }
       })
-
+       
+      app.get('/camp/:id',async(req,res)=>{
+          try{
+             const id=req.params.id
+             const query={_id: new ObjectId(id)}
+             const result= await campsCollection.findOne(query)
+             return res.send(result)
+          }
+          catch{
+            return res.send({error:true})
+          }
+      })
 
 
 
