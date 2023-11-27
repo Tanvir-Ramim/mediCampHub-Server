@@ -103,6 +103,18 @@ async function run() {
            }
       })
 
+      app.delete('/camp/:id',async(req,res)=>{
+             try{
+                const id=req.params.id
+                const query={_id: new ObjectId(id)}
+                const result=await campsCollection.deleteOne(query)
+                return res.send(result)
+             }
+             catch{
+               return res.send({error:true})
+             }
+      })
+
       app.put('/participate',verify,async(req,res)=>{
             try{
               const {id,newParticipant}=req.body
@@ -155,9 +167,8 @@ async function run() {
           }
       })
 
-      app.get('/manageCamps',async(req,res)=>{
+      app.get('/manageCamps', verify,async(req,res)=>{
            const {email}=req.query
-           console.log(email)
            if(email){
              const query={userEmail: email}
              const result=await campsCollection.find(query,{
