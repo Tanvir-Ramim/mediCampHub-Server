@@ -115,6 +115,30 @@ async function run() {
              }
       })
 
+
+      app.put('/updateCamp',async(req,res)=>{
+            const info= req.body
+            const query={_id: new ObjectId(info?.id)}
+            const options={upsert:true}
+            const { name, services, scheduled, location, fees, audience, healthCareName, details,healthPro}=info ||{}
+
+            const updateInfo={
+               $set:{
+                name:name,
+                scheduled:scheduled,
+                audience:audience,
+                details:details,
+                fees: fees,
+                healthPro: healthPro,
+                location:location,
+                services:services,
+                healthCareName:healthCareName
+               }
+            }
+            const result=await campsCollection.updateOne(query,updateInfo,options)
+            return res.send(result)
+      })
+
       app.put('/participate',verify,async(req,res)=>{
             try{
               const {id,newParticipant}=req.body
