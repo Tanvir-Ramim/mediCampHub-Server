@@ -51,7 +51,17 @@ async function run() {
        const usersCollection=client.db('MediCampsHub').collection('users')
        const campsCollection=client.db('MediCampsHub').collection('camps')
        const registerCollection=client.db('MediCampsHub').collection('register')
-       
+         
+       const verifyOrganizer=async(req,res,next)=>{
+        const email= req.user.email
+        const query={email:email}
+        const user=await usersCollection.findOne(query)
+        const isOrganizer= user?.role=== 'Organizer'
+        if(!isOrganizer){
+          return res.status(403).send({message:'forbidden access'})
+        }
+        next()
+  }
 
 
       //  jwt 
@@ -103,7 +113,7 @@ async function run() {
            }
       })
 
-      app.delete('/camp/:id',async(req,res)=>{
+      app.delete('/camp/:id',verify,verifyOrganizer, async(req,res)=>{
              try{
                 const id=req.params.id
                 const query={_id: new ObjectId(id)}
@@ -116,7 +126,7 @@ async function run() {
       })
 
 
-      app.put('/updateCamp',async(req,res)=>{
+      app.put('/updateCamp',verify,verifyOrganizer, async(req,res)=>{
             const info= req.body
             const query={_id: new ObjectId(info?.id)}
             const options={upsert:true}
@@ -217,7 +227,7 @@ async function run() {
 
 
       //  users related Api
-     app.get('/userRole/:email',async(req,res)=>{
+     app.get('/userRole/:email',verify, async(req,res)=>{
               try{
                 const email=req.params.email
                const query={email:email}
