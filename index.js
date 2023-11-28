@@ -94,7 +94,6 @@ async function run() {
             app.post('/payment',verify, async(req,res)=>{
                  try{
                   const paymentInfo=req.body 
-                  console.log(paymentInfo)
                   const result=await paymentCollection.insertOne(paymentInfo)
                   return res.send(result)
                  }
@@ -106,9 +105,22 @@ async function run() {
 
             // after payment  
 
-            // app.put('/afterPayment',async(req,res)=>{
-            //     const 
-            // })
+            app.put('/afterPayment',async(req,res)=>{
+                try{
+                  const {registerId,status}=req.body
+                const query={_id: new ObjectId(registerId)}
+                const updateInfo={
+                    $set:{
+                      paymentStatus: status
+                    }
+                }
+                const result=await registerCollection.updateOne(query,updateInfo)
+                return res.send(result)
+                }
+                catch{
+                  return res.send({error:true})
+                }
+            })
 
 
 
