@@ -52,6 +52,7 @@ async function run() {
        const usersCollection=client.db('MediCampsHub').collection('users')
        const campsCollection=client.db('MediCampsHub').collection('camps')
        const registerCollection=client.db('MediCampsHub').collection('register')
+       const paymentCollection=client.db('MediCampsHub').collection('paymentInfo')
          
        const verifyOrganizer=async(req,res,next)=>{
         const email= req.user.email
@@ -65,9 +66,10 @@ async function run() {
   }
 
               // payment
-
-              app.post('/create-payment-intent',async(req,res)=>{
-                const {price}=req.body
+            
+            app.post('/create-payment-intent',async(req,res)=>{
+                try{
+                  const {price}=req.body
                 if(price==0){
                    return res.send('not')
                 }
@@ -79,12 +81,34 @@ async function run() {
                      payment_method_types:[
                        'card'
                      ]
-         
                  })
                  res.send({
                    clientSecret: paymentIntent.client_secret,
                  })
+                }
+                catch{
+                  return res.send({error:true})
+                }
              })
+
+            app.post('/payment',verify, async(req,res)=>{
+                 try{
+                  const paymentInfo=req.body 
+                  console.log(paymentInfo)
+                  const result=await paymentCollection.insertOne(paymentInfo)
+                  return res.send(result)
+                 }
+                 catch{
+                  return res.send({error:true}) 
+                 }
+            })
+
+
+            // after payment  
+
+            // app.put('/afterPayment',async(req,res)=>{
+            //     const 
+            // })
 
 
 
@@ -128,7 +152,6 @@ async function run() {
           if(email){
             const query={userMail: email}
             const result= await registerCollection.find(query).toArray()
-            console.log(result)
             return res.send(result)
           }
       })
@@ -206,7 +229,6 @@ async function run() {
       app.get('/camps',async(req,res)=>{
           try{
              const result=await campsCollection.find().toArray()
-             const len=result.length
              return res.send(result)
           }
           catch{
