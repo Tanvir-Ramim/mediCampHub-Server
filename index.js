@@ -53,6 +53,7 @@ async function run() {
        const campsCollection=client.db('MediCampsHub').collection('camps')
        const registerCollection=client.db('MediCampsHub').collection('register')
        const paymentCollection=client.db('MediCampsHub').collection('paymentInfo')
+       const reviewCollection=client.db('MediCampsHub').collection('review')
          
        const verifyOrganizer=async(req,res,next)=>{
         const email= req.user.email
@@ -63,7 +64,30 @@ async function run() {
           return res.status(403).send({message:'forbidden access'})
         }
         next()
-  }
+  }           
+                   
+                //  review related api 
+               app.post('/review',async(req,res)=>{
+                   try{
+                    const reviewInfo=req.body
+                   const result =await reviewCollection.insertOne(reviewInfo)
+                   return res.send(result)
+                   }
+                   catch{
+                    return res.send({error:true})
+                   }
+               })
+                      
+             app.get('/reviews',async(req,res)=>{
+                try{
+                  const result= await reviewCollection.find().toArray()
+                return res.send(result)
+                }
+                catch{
+                  return res.send({error:true})
+                }
+             })
+
 
               // payment
             
@@ -170,7 +194,7 @@ async function run() {
            }
            catch
            {
-            return res.send(result)
+            return res.send({error:true})
            }
       })
 
@@ -182,21 +206,42 @@ async function run() {
             res.send(result)
            }
            catch{
-            return res.send(result)
+            return res.send({error:true})
            }
 
       })
 
 
       app.get('/register',verify,async(req,res)=>{
-          const {email}= req.query
+          try{
+            const {email}= req.query
           if(email){
             const query={userMail: email}
             const result= await registerCollection.find(query).toArray()
             return res.send(result)
           }
+          }
+          catch
+          {
+            return res.send({error:true})
+          }
       })
 
+      app.get('/paidRegister',verify,async(req,res)=>{
+         try
+         {
+          const {email}= req.query
+          if(email){
+            const query={userMail: email ,paymentStatus:'Paid' }
+            const result= await registerCollection.find(query).toArray()
+            return res.send(result)
+          }
+         }
+         catch{
+          return res.send({error:true})
+         }
+      })
+       
 
      
         
@@ -289,6 +334,29 @@ async function run() {
           }
 
       })
+        
+      app.get('/careWant',async(req,res)=>{
+           try{
+            const {email}=req.query
+           const query={healthPro:email}
+           const result=await campsCollection.find(query,{
+            projection:{
+
+              audience:0,
+                 details:0,
+                 image:0,
+                 userEmail:0,
+                 participant:0
+            }
+           }).toArray()
+           return res.send(result)
+           }
+           catch{
+            return res.send({error:true})
+           }
+      })
+
+
 
       app.get('/camps',async(req,res)=>{
           try{
@@ -400,7 +468,8 @@ async function run() {
           return res.send({error:true})
         }
      })
-
+      
+  
 
 
     // Send a ping to confirm a successful connection
