@@ -4,6 +4,7 @@ require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const stripe=require('stripe')(process.env.Stripe_Key)
 const app=express();
 const port=process.env.PORT || 5000
 
@@ -63,6 +64,31 @@ async function run() {
         next()
   }
 
+              // payment
+
+              app.post('/create-payment-intent',async(req,res)=>{
+                const {price}=req.body
+                if(price==0){
+                   return res.send('not')
+                }
+                 const amount=parseInt(price*100)
+                   // console.log(amount)
+                 const paymentIntent=await stripe.paymentIntents.create({
+                     amount: amount,
+                     currency: 'usd',
+                     payment_method_types:[
+                       'card'
+                     ]
+         
+                 })
+                 res.send({
+                   clientSecret: paymentIntent.client_secret,
+                 })
+             })
+
+
+
+
 
       //  jwt 
       app.post('/jwt',async (req,res)=>{
@@ -91,11 +117,20 @@ async function run() {
      
       // registration related api
       app.post('/register', verify,async (req,res)=>{
-         
             const registerInfo=req.body 
-           
             const result=await registerCollection.insertOne(registerInfo)
             return res.send(result)
+      })
+
+      app.get('/register',verify,async(req,res)=>{
+          const {email}= req.query
+         
+          if(email){
+            const query={userMail: email}
+            const result= await registerCollection.find(query).toArray()
+            console.log(result)
+            return res.send(result)
+          }
       })
 
 
@@ -202,24 +237,30 @@ async function run() {
       })
 
       app.get('/manageCamps', verify,async(req,res)=>{
-           const {email}=req.query
-           if(email){
-             const query={userEmail: email}
-             const result=await campsCollection.find(query,{
-              projection:{
-                image:0,
-                services:0,
-                details:0,
-                healthPro:0,
-                services:0,
-                audience:0
-              }
-             }).toArray()
-             return res.send(result)
-           }
-           else{
+          try
+          {
+            const {email}=req.query
+            if(email){
+              const query={userEmail: email}
+              const result=await campsCollection.find(query,{
+               projection:{
+                 image:0,
+                 services:0,
+                 details:0,
+                 healthPro:0,
+                 services:0,
+                 audience:0
+               }
+              }).toArray()
+              return res.send(result)
+            }
+            else{
+             return res.send({error:true})
+            }
+          }
+          catch{
             return res.send({error:true})
-           }
+          }
       })
 
 
@@ -227,7 +268,7 @@ async function run() {
 
 
       //  users related Api
-     app.get('/userRole/:email',verify, async(req,res)=>{
+     app.get('/userRole/:email', async(req,res)=>{
               try{
                 const email=req.params.email
                const query={email:email}
