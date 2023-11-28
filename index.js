@@ -121,7 +121,16 @@ async function run() {
                   return res.send({error:true})
                 }
             })
-
+            
+            app.get('/emailPayment',verify ,async(req,res)=>{
+              const deEmail= req.user.email
+              const {email}=req.query
+              if(email===deEmail){
+                 const query={email: email}
+                 const result=await paymentCollection.find(query).toArray()
+                 return res.send(result)
+              }
+            })
 
 
 
@@ -153,14 +162,34 @@ async function run() {
      
       // registration related api
       app.post('/register', verify,async (req,res)=>{
+           try
+           {
             const registerInfo=req.body 
             const result=await registerCollection.insertOne(registerInfo)
             return res.send(result)
+           }
+           catch
+           {
+            return res.send(result)
+           }
       })
+
+      app.delete('/deleteRegister/:id',async(req,res)=>{
+           try{
+            const id=req.params.id
+            const query={_id: new ObjectId(id)}
+            const result= await registerCollection.deleteOne(query)
+            res.send(result)
+           }
+           catch{
+            return res.send(result)
+           }
+
+      })
+
 
       app.get('/register',verify,async(req,res)=>{
           const {email}= req.query
-         
           if(email){
             const query={userMail: email}
             const result= await registerCollection.find(query).toArray()
@@ -218,7 +247,7 @@ async function run() {
             const result=await campsCollection.updateOne(query,updateInfo,options)
             return res.send(result)
       })
-
+        //  ++++
       app.put('/participate',verify,async(req,res)=>{
             try{
               const {id,newParticipant}=req.body
@@ -234,8 +263,31 @@ async function run() {
             }
             catch{
               return res.send({error:true})
-            }
-            
+            }   
+      })
+
+      // ----
+      app.put('/participateOut', async(req,res)=>{
+          try{
+            const {searchId}=req.body
+            const query= {_id: new ObjectId(searchId)}
+            const findData= await campsCollection.findOne(query)
+            const {participant}=findData
+             
+           //  update
+ 
+           const  newInfo={
+             $set:{
+               participant: participant-1
+             }
+           }
+           const result=await campsCollection.updateOne(query,newInfo)
+           return res.send(result)
+          }
+          catch{
+            return res.send({error:true})
+          }
+
       })
 
       app.get('/camps',async(req,res)=>{
