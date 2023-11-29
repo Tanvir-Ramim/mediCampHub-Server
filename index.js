@@ -11,7 +11,7 @@ const port=process.env.PORT || 5000
 
 // middleware
 app.use(cors({
-    origin:['https://sage-banoffee-53a8b3.netlify.app'],
+    origin:['http://localhost:5173'],
     credentials: true
 }))
 app.use(express.json())
@@ -212,7 +212,8 @@ async function run() {
       })
 
       app.put('/changeStatus',verify, verifyOrganizer,async(req,res)=>{
-           const {id,status}=req.body
+           try{
+            const {id,status}=req.body
            const query={_id: new ObjectId(id)}
            const updateInfo={
              $set:{
@@ -221,6 +222,10 @@ async function run() {
            }
            const result=await registerCollection.updateOne(query,updateInfo)
            return res.send(result)
+           }
+           catch{
+            return res.send({error:true})
+           }
       })
 
 
@@ -295,7 +300,8 @@ async function run() {
 
 
       app.put('/updateCamp',verify,verifyOrganizer, async(req,res)=>{
-            const info= req.body
+            try{
+              const info= req.body
             const query={_id: new ObjectId(info?.id)}
             const options={upsert:true}
             const { name, services, scheduled, location, fees, audience, healthCareName, details,healthPro}=info ||{}
@@ -315,6 +321,10 @@ async function run() {
             }
             const result=await campsCollection.updateOne(query,updateInfo,options)
             return res.send(result)
+            }
+            catch{
+              return res.send({error:true})
+            }
       })
         //  ++++
       app.put('/participate',verify,async(req,res)=>{
@@ -514,7 +524,7 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
