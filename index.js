@@ -11,7 +11,7 @@ const port=process.env.PORT || 5000
 
 // middleware
 app.use(cors({
-    origin:['https://voluble-bombolone-214e1c.netlify.app'],
+    origin:['https://sage-banoffee-53a8b3.netlify.app'],
     credentials: true
 }))
 app.use(express.json())
