@@ -211,6 +211,18 @@ async function run() {
 
       })
 
+      app.put('/changeStatus',verify, verifyOrganizer,async(req,res)=>{
+           const {id,status}=req.body
+           const query={_id: new ObjectId(id)}
+           const updateInfo={
+             $set:{
+              ConfirmationStatus: status
+             }
+           }
+           const result=await registerCollection.updateOne(query,updateInfo)
+           return res.send(result)
+      })
+
 
       app.get('/register',verify,async(req,res)=>{
           try{
@@ -240,6 +252,16 @@ async function run() {
          catch{
           return res.send({error:true})
          }
+      })
+
+      app.get('/registerAll',verify,verifyOrganizer,async(req,res)=>{
+           try{
+             const result=await registerCollection.find().toArray()
+             return res.send(result)
+           }
+           catch{
+            return res.send({error:true})
+           }
       })
        
 
