@@ -256,7 +256,9 @@ async function run() {
 
       app.get('/registerAll',verify,verifyOrganizer,async(req,res)=>{
            try{
-             const result=await registerCollection.find().toArray()
+              const {email}=req.query
+              const query={campEmail: email}
+             const result=await registerCollection.find(query).toArray()
              return res.send(result)
            }
            catch{
