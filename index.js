@@ -334,6 +334,23 @@ async function run() {
           }
 
       })
+
+      app.put('/changeDecision',async (req,res)=>{
+         try{
+          const {changeDecision,id}=req.body
+          const query={_id: new ObjectId(id)}
+          const updateDecision= {
+             $set:{
+              healthcareDicison: changeDecision
+             }
+          }
+          const result=await campsCollection.updateOne(query,updateDecision)
+          return res.send(result)
+         }
+         catch{
+          return res.send({error:true})
+         }
+      })
         
       app.get('/careWant',async(req,res)=>{
            try{
